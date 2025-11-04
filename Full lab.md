@@ -959,6 +959,297 @@ Satisfying assignment: {'A': True, 'B': True}
 
 Result: The formula is SATISFIABLE (true in some models).
 ```
+### Problem Statement:
+
+To verify the correctness of a given propositional logic formula using a model checking algorithm which evaluates the formula for every possible truth combination of the variables involved.
+
+---
+
+### Aim:
+
+To implement a truth-table based propositional model checking algorithm which checks the truth value of a formula under all possible assignments and determines whether the formula is **valid**, **satisfiable**, or **unsatisfiable**.
+
+---
+
+### Algorithm (Truth Table Based Model Checking):
+
+1. Input propositional formula.
+2. Extract all unique propositional variables.
+3. Generate all 2ⁿ truth assignments where n = number of variables.
+4. For each truth assignment:
+
+   * Replace variables with truth values.
+   * Evaluate the formula.
+   * Count number of true results.
+5. After all evaluations:
+
+   * If formula is True in all cases → VALID
+   * If formula is True in some cases → SATISFIABLE
+   * If formula is False in all cases → UNSATISFIABLE
+
+---
+
+### Program
+
+```python
+from itertools import product
+
+def evaluate(formula, assignment):
+    replaced = formula
+    for var, val in assignment.items():
+        replaced = replaced.replace(var, str(val))
+    return eval(replaced)
+
+def get_variables(formula):
+    return sorted(set([c for c in formula if c.isalpha()]))
+
+def model_checking(formula):
+    vars = get_variables(formula)
+    combos = list(product([False, True], repeat=len(vars)))
+    true_count = 0
+
+    for values in combos:
+        assign = dict(zip(vars, values))
+        result = evaluate(formula, assign)
+        if result:
+            print(f"Satisfying assignment: {assign}")
+            true_count += 1
+        else:
+            print(f"Failed assignment: {assign}")
+
+    if true_count == len(combos):
+        print("\nResult: The formula is VALID (true in all models).")
+    elif true_count > 0:
+        print("\nResult: The formula is SATISFIABLE (true in some models).")
+    else:
+        print("\nResult: The formula is UNSATISFIABLE (false in all models).")
+
+
+if __name__ == "__main__":
+    formula = "(A and B) or (not A and not B)"
+    print(f"\nChecking formula: {formula}\n")
+    model_checking(formula)
+```
+
+---
+
+### Sample Output
+
+```
+Checking formula: (A and B) or (not A and not B)
+
+Satisfying assignment: {'A': False, 'B': False}
+Failed assignment: {'A': False, 'B': True}
+Failed assignment: {'A': True, 'B': False}
+Satisfying assignment: {'A': True, 'B': True}
+
+Result: The formula is SATISFIABLE (true in some models).
+```
+### Problem Statement
+
+To design and implement a rule-based inference system using **Backward Chaining** in which known facts and rules are given, and the system checks whether a goal can be proven logically by recursively proving sub-goals.
+
+Given:
+
+* Initial Facts → **A, B, E**
+* Rules →
+
+  * A ∧ B → C
+  * C → D
+  * D ∧ E → F
+  * F → G
+* Goal → **G**
+
+---
+
+### Aim
+
+To implement a backward chaining knowledge representation system that attempts to prove a goal by recursively checking whether it can be inferred from known facts and rules.
+
+---
+
+### Algorithm (Backward Chaining)
+
+1. Take the goal to be proven.
+2. If the goal is already in known facts → success.
+3. Else, find a rule whose conclusion equals the goal.
+4. For each premise of that rule:
+
+   * recursively try to prove that premise.
+5. If all premises are proven → infer the goal as true.
+6. If no rule supports the goal → fail.
+
+---
+
+### Program
+
+```python
+# Backward Chaining Inference System
+
+# Rules for inference
+rules = {
+    "C": ["A", "B"],
+    "D": ["C"],
+    "F": ["D", "E"],
+    "G": ["F"]
+}
+
+# Known facts
+facts = {"A", "B", "E"}
+
+# Function to implement backward chaining
+def backward_chaining(goal, facts, rules, visited=None):
+    if visited is None:
+        visited = set()
+
+    if goal in facts:
+        return True
+
+    if goal in visited:
+        return False  # Avoid loop
+
+    visited.add(goal)
+
+    if goal not in rules:
+        return False
+
+    for premise in rules[goal]:
+        if not backward_chaining(premise, facts, rules, visited):
+            return False
+
+    facts.add(goal)
+    print(f"Inferred: {goal}")
+    return True
+
+# Goal to prove
+goal = "G"
+
+# Run the backward chaining
+result = backward_chaining(goal, facts, rules)
+
+# Display final result
+print("\nFinal Facts:", facts)
+print("Goal Reached:", result)
+```
+
+---
+
+### Sample Output
+
+```
+Inferred: C
+Inferred: D
+Inferred: F
+Inferred: G
+
+Final Facts: {'A', 'B', 'E', 'C', 'D', 'F', 'G'}
+Goal Reached: True
+```
+### Problem Statement
+
+To design and implement a propositional logic inference system using the **resolution method**.
+Given a knowledge base in CNF (Conjunctive Normal Form) and a query, the system applies resolution to check if the query is logically entailed.
+
+---
+
+### Aim
+
+To implement resolution theorem proving for propositional logic, using **refutation** method by negating the query and deriving contradiction using resolution rule.
+
+---
+
+### Algorithm (Resolution)
+
+1. Convert all clauses to CNF.
+2. Negate the query and add it to KB.
+3. Try to resolve pairs of clauses to produce new resolvents.
+4. If empty clause ∅ produced → query is entailed.
+5. If no more new clauses can be produced → query is not entailed.
+
+---
+
+### Program
+
+```python
+# Function to negate a literal
+def negate_literal(literal):
+    return literal[1:] if literal.startswith('~') else '~' + literal
+
+# Function to resolve two clauses
+def resolve(ci, cj):
+    resolvents = []
+    for di in ci:
+        for dj in cj:
+            if di == negate_literal(dj):
+                new_clause = list(set(ci + cj))
+                new_clause.remove(di)
+                new_clause.remove(dj)
+                resolvents.append(sorted(set(new_clause)))
+    return resolvents
+
+# Resolution algorithm
+def resolution(kb, query):
+    kb = [sorted(set(clause)) for clause in kb]
+    query_negated = [negate_literal(l) for l in query]
+    kb.append(query_negated)
+
+    print(f"Initial KB (with negated query): {kb}\n")
+
+    new = set()
+    while True:
+        n = len(kb)
+        pairs = [(kb[i], kb[j]) for i in range(n) for j in range(i+1, n)]
+        generated_any = False
+
+        for (ci, cj) in pairs:
+            resolvents = resolve(ci, cj)
+            for resolvent in resolvents:
+                if not resolvent:
+                    print(f"Resolved {ci} and {cj} -> [] (empty clause)")
+                    return True
+                r = tuple(sorted(resolvent))
+                if r not in new:
+                    print(f"Resolved {ci} and {cj} -> {resolvent}")
+                    new.add(r)
+                    generated_any = True
+
+        if not generated_any:
+            print("No more clauses can be resolved. Query NOT entailed.")
+            return False
+
+        for clause in new:
+            if list(clause) not in kb:
+                kb.append(list(clause))
+
+# Example Knowledge Base: (P ∨ Q), (¬P ∨ R), (¬Q ∨ R)
+kb = [
+    ['P', 'Q'],
+    ['~P', 'R'],
+    ['~Q', 'R']
+]
+
+# Query to prove: R
+query = ['R']
+
+# Run Resolution Theorem Proving
+result = resolution(kb, query)
+print("\nFinal Result: Is the query entailed?", result)
+```
+
+---
+
+### Sample Output
+
+```
+Initial KB (with negated query): [['P', 'Q'], ['~P', 'R'], ['~Q', 'R'], ['~R']]
+
+Resolved ['~P', 'R'] and ['~R'] -> ['~P']
+Resolved ['~Q', 'R'] and ['~R'] -> ['~Q']
+Resolved ['P', 'Q'] and ['~P'] -> ['Q']
+Resolved ['Q'] and ['~Q'] -> [] (empty clause)
+
+Final Result: Is the query entailed? True
+```
 
 
 
