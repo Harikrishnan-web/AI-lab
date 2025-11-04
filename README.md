@@ -1413,6 +1413,145 @@ Predicted Class: Yes
 ```
 
 ---
+ok here is **proper** formatted final version SAME task type like previous :
+( Problem Statement + Aim + Program + Output explanation )
+
+---
+
+## Problem Statement
+
+Create a simple 4x4 Wumpus World environment where an AI agent can move using arrow keys. The world contains one gold, one Wumpus, and pits at random cells. The agent starts at (0,0). Using keyboard control, the rational agent must avoid pits and Wumpus and try to reach gold.
+
+---
+
+## Aim
+
+To simulate the Wumpus World environment using Python and Tkinter and analyze rational agent behavior under uncertainty using game-theoretic thinking and logical inference — where each move is chosen based on survival and maximizing reward (finding gold / avoiding risk).
+
+---
+
+## Program
+
+```python
+import tkinter as tk
+import random
+
+GRID_SIZE = 4
+CELL_SIZE = 100
+
+class WumpusWorld:
+    def __init__(self, master):
+        self.master = master
+        self.canvas = tk.Canvas(master, width=GRID_SIZE * CELL_SIZE, height=GRID_SIZE * CELL_SIZE)
+        self.canvas.pack()
+
+        self.agent_pos = [0, 0]
+        self.gold_pos = [random.randint(0, 3), random.randint(0, 3)]
+        self.wumpus_pos = [random.randint(1, 3), random.randint(1, 3)]
+        self.pits = [[random.randint(1, 3), random.randint(1, 3)] for _ in range(3)]
+
+        # avoid overlap with agent
+        if self.gold_pos == self.agent_pos:
+            self.gold_pos = [3, 3]
+        if self.wumpus_pos == self.agent_pos:
+            self.wumpus_pos = [2, 2]
+        self.pits = [p for p in self.pits if p != self.agent_pos]
+
+        self.draw_grid()
+        self.master.bind("<Key>", self.move_agent)
+
+    def draw_grid(self):
+        self.canvas.delete("all")
+        for i in range(GRID_SIZE):
+            for j in range(GRID_SIZE):
+                x0 = j * CELL_SIZE
+                y0 = i * CELL_SIZE
+                x1 = x0 + CELL_SIZE
+                y1 = y0 + CELL_SIZE
+
+                self.canvas.create_rectangle(x0, y0, x1, y1, fill="white", outline="black")
+
+                if [i, j] == self.agent_pos:
+                    self.canvas.create_text(x0 + 50, y0 + 50, text="A", font=("Arial", 30))
+                elif [i, j] == self.gold_pos:
+                    self.canvas.create_text(x0 + 50, y0 + 50, text="G", font=("Arial", 30))
+                elif [i, j] == self.wumpus_pos:
+                    self.canvas.create_text(x0 + 50, y0 + 50, text="W", font=("Arial", 30))
+                elif [i, j] in self.pits:
+                    self.canvas.create_text(x0 + 50, y0 + 50, text="P", font=("Arial", 25))
+
+    def move_agent(self, event):
+        key = event.keysym
+        i, j = self.agent_pos
+
+        if key == "Up" and i > 0:
+            self.agent_pos[0] -= 1
+        elif key == "Down" and i < GRID_SIZE - 1:
+            self.agent_pos[0] += 1
+        elif key == "Left" and j > 0:
+            self.agent_pos[1] -= 1
+        elif key == "Right" and j < GRID_SIZE - 1:
+            self.agent_pos[1] += 1
+
+        self.draw_grid()
+        self.check_status()
+
+    def check_status(self):
+        if self.agent_pos == self.gold_pos:
+            self.show_message("You found GOLD ! You win!")
+        elif self.agent_pos == self.wumpus_pos:
+            self.show_message("You were eaten by WUMPUS!")
+        elif self.agent_pos in self.pits:
+            self.show_message("You fell into a PIT!")
+
+    def show_message(self, message):
+        self.canvas.create_text(
+            GRID_SIZE * CELL_SIZE / 2,
+            GRID_SIZE * CELL_SIZE / 2,
+            text=message,
+            font=("Arial", 24),
+            fill="red"
+        )
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Wumpus World Simulation")
+    game = WumpusWorld(root)
+    root.mainloop()
+```
+
+---
+
+## Output (Explanation)
+
+When you run this program:
+
+* A 4x4 grid window will open
+* **A** = Agent
+* **G** = Gold
+* **W** = Wumpus
+* **P** = Pits
+
+You use **Arrow Keys** to move agent.
+
+Example outcomes on screen:
+
+```
+You found GOLD ! You win!
+```
+
+or
+
+```
+You were eaten by WUMPUS!
+```
+
+or
+
+```
+You fell into a PIT!
+```
 
 
 
