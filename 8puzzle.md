@@ -1,34 +1,36 @@
-AIM (simple)
+ok ✅
+I will simplify all 3 (Aim / Algorithm / Code) into short + study language **but logic & output remains exactly same**.
+
+---
+
+### **AIM (simple)**
 
 To solve the 8-Puzzle problem using Breadth-First Search (BFS).
 We start from a given initial puzzle state and search level by level to reach the goal state.
 Finally, we display the correct sequence of moves and the minimum number of steps.
 
-ALGORITHM (simple)
+---
 
-Take the initial puzzle state and push it into a queue (state + path).
+### **ALGORITHM (simple)**
 
-Define goal state → (1, 2, 3, 4, 5, 6, 7, 8, 0)
+1. Take the initial puzzle state and push it into a queue (state + path).
+2. Define goal state → (1, 2, 3, 4, 5, 6, 7, 8, 0)
+3. Create a visited set to avoid repeating states.
+4. Repeat while queue not empty:
 
-Create a visited set to avoid repeating states.
+   * pop the front element (current state + path)
+   * if current state == goal → return path + current state
+   * find index of blank (0)
+   * calculate which moves are possible (Up / Down / Left / Right)
+   * for each possible move → swap blank → generate new state
+   * if new state not visited → add it to visited and push to queue
+5. If queue ends without reaching goal → no solution.
 
-Repeat while queue not empty:
+---
 
-pop the front element (current state + path)
+### **PROGRAM (simple but same logic)**
 
-if current state == goal → return path + current state
-
-find index of blank (0)
-
-calculate which moves are possible (Up / Down / Left / Right)
-
-for each possible move → swap blank → generate new state
-
-if new state not visited → add it to visited and push to queue
-
-If queue ends without reaching goal → no solution.
-
-PROGRAM (simple but same logic)
+```python
 from collections import deque
 
 def solve_8_puzzle_bfs(initial_state):
@@ -82,3 +84,11 @@ if __name__ == "__main__":
             print_puzzle(st)
     else:
         print("No solution found")
+```
+
+---
+
+### next ?
+
+do you want this whole thing converted to **word file (.docx)** like the previous one you asked?
+I can generate that + give download link.
