@@ -350,4 +350,153 @@ Step 12: (7, 9)
 ```
 
 ---
+## Aim
+
+To implement **Greedy Best First Search** to find the path from the start node to the goal node using only the heuristic value (lowest first) at every step.
+
+---
+
+## Algorithm
+
+1. Put `(heuristic(start), start, [start])` in a min heap queue.
+2. Maintain a visited set initially empty.
+3. While queue not empty:
+
+   * Pop node with smallest heuristic value.
+   * If already visited → continue.
+   * Mark node visited.
+   * If node is goal → return the path.
+   * For each neighbor:
+
+     * Create new path by adding neighbor
+     * Push `(heuristic(neighbor), neighbor, new_path)` into queue.
+4. If queue becomes empty & goal not reached → return None.
+
+---
+
+## Program (clean & correct)
+
+```python
+import heapq
+
+def greedy_best_first_search(graph, start, goal, heuristic):
+    priority_queue = [(heuristic[start], start, [start])]
+    visited = set()
+
+    while priority_queue:
+        h, current_node, path = heapq.heappop(priority_queue)
+
+        if current_node in visited:
+            continue
+        visited.add(current_node)
+
+        if current_node == goal:
+            return path
+
+        for neighbor in graph.get(current_node, {}):
+            if neighbor not in visited:
+                new_path = path + [neighbor]
+                heapq.heappush(priority_queue, (heuristic[neighbor], neighbor, new_path))
+
+    return None
+```
+
+### Example 1
+
+```python
+graph = {
+    'A': {'B':1,'C':5},
+    'B': {'D':3,'E':6},
+    'C': {'F':2},
+    'D': {'G':4},
+    'E': {'G':2},
+    'F': {'G':7},
+    'G':{}
+}
+
+heuristic = {'A':7,'B':6,'C':3,'D':4,'E':2,'F':1,'G':0}
+
+path = greedy_best_first_search(graph,'A','G',heuristic)
+print("Path from A to G:",path)
+```
+
+### Example 2
+
+```python
+graph2 = {
+    'S':{'A':1,'B':5},
+    'A':{'C':2,'D':3},
+    'B':{'E':4},
+    'D':{'G':2},
+    'E':{'G':1},
+    'G':{}
+}
+
+heuristic2 = {'S':7,'A':6,'B':4,'C':3,'D':2,'E':1,'G':0}
+
+path2 = greedy_best_first_search(graph2,'S','G',heuristic2)
+print("Path from S to G:",path2)
+```
+
+---
+
+## Sample Output
+
+```
+Path from A to G: ['A', 'C', 'F', 'G']
+Path from S to G: ['S', 'B', 'E', 'G']
+```
+## Aim
+
+To implement the **Mini-Max algorithm** and compute the maximum guaranteed score a maximizing player can obtain by assuming both players play optimally.
+
+---
+
+## Algorithm
+
+1. Start at root with depth = 0.
+2. For each node:
+
+   * If maximizer → return **max** of children’s values.
+   * If minimizer → return **min** of children’s values.
+3. When depth reaches leaf level → return the leaf value.
+4. Return the propagated optimal value to the root.
+
+---
+
+## Program (clean)
+
+```python
+import math
+
+def minimax(curDepth, nodeIndex, maxTurn, scores, targetDepth):
+    if curDepth == targetDepth:        # leaf
+        return scores[nodeIndex]
+
+    if maxTurn:     # maximizer
+        return max(
+            minimax(curDepth+1, nodeIndex*2, False, scores, targetDepth),
+            minimax(curDepth+1, nodeIndex*2+1, False, scores, targetDepth)
+        )
+    else:           # minimizer
+        return min(
+            minimax(curDepth+1, nodeIndex*2, True, scores, targetDepth),
+            minimax(curDepth+1, nodeIndex*2+1, True, scores, targetDepth)
+        )
+
+# leaf values
+scores = [3,5,2,9,12,5,23,23]
+treeDepth = int(math.log2(len(scores)))
+
+print("The optimal value is:", minimax(0,0,True,scores,treeDepth))
+```
+
+---
+
+## Sample Output
+
+```
+The optimal value is: 9
+```
+
 
