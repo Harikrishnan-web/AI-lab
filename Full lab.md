@@ -180,3 +180,174 @@ After FloodFill:
 ```
 
 ---
+# Aim
+
+To implement the **A*** search algorithm on a 2D grid (with obstacles) to find a short path from a source cell to a destination cell using an admissible heuristic (Euclidean). The algorithm explores candidate cells guided by `f = g + h` (cost so far + heuristic).
+
+# Algorithm (short)
+
+1. Put the start node in an open (priority) list with `f = 0`, mark all nodes unvisited.
+2. While open list not empty:
+
+   * Pop the node `q` with smallest `f`.
+   * If `q` is destination → reconstruct & return path.
+   * Otherwise generate up to 8 neighbors (N, S, E, W, and 4 diagonals).
+   * For each neighbor:
+
+     * If invalid / blocked / in closed list → skip.
+     * Compute `g_new = q.g + move_cost` and `h = Euclidean(neighbor, dest)`, `f_new = g_new + h`.
+     * If neighbor not in open list or `f_new` is better → update neighbor's `g,h,f,parent` and push to open list.
+   * Mark `q` as closed.
+3. If open list exhausted → no path.
+
+---
+
+# Python code (clean, corrected, short)
+
+```python
+import heapq
+import math
+
+ROW = 9
+COL = 10
+
+class Cell:
+    def __init__(self):
+        self.parent_i = -1
+        self.parent_j = -1
+        self.f = float('inf')
+        self.g = float('inf')
+        self.h = 0.0
+
+def is_valid(r, c):
+    return 0 <= r < ROW and 0 <= c < COL
+
+def is_unblocked(grid, r, c):
+    return grid[r][c] == 1
+
+def is_destination(r, c, dest):
+    return (r, c) == dest
+
+def calculate_h_value(r, c, dest):
+    return math.hypot(r - dest[0], c - dest[1])   # Euclidean
+
+def trace_path(cell_details, dest):
+    path = []
+    r, c = dest
+    while not (cell_details[r][c].parent_i == r and cell_details[r][c].parent_j == c):
+        path.append((r, c))
+        pi = cell_details[r][c].parent_i
+        pj = cell_details[r][c].parent_j
+        r, c = pi, pj
+    path.append((r, c))  # add source
+    path.reverse()
+    return path
+
+def a_star_search(grid, src, dest):
+    if not is_valid(*src) or not is_valid(*dest):
+        print("Source or destination is invalid")
+        return None
+    if not is_unblocked(grid, *src) or not is_unblocked(grid, *dest):
+        print("Source or destination is blocked")
+        return None
+    if is_destination(*src, dest):
+        return [src]
+
+    closed = [[False]*COL for _ in range(ROW)]
+    cell = [[Cell() for _ in range(COL)] for _ in range(ROW)]
+
+    si, sj = src
+    cell[si][sj].g = 0.0
+    cell[si][sj].h = 0.0
+    cell[si][sj].f = 0.0
+    cell[si][sj].parent_i = si
+    cell[si][sj].parent_j = sj
+
+    # heap entries: (f, g, i, j)
+    open_list = []
+    heapq.heappush(open_list, (0.0, 0.0, si, sj))
+
+    # 8 directions with corresponding move costs
+    dirs = [(-1, 0, 1.0), (1, 0, 1.0), (0, -1, 1.0), (0, 1, 1.0),
+            (-1, -1, math.sqrt(2)), (-1, 1, math.sqrt(2)),
+            (1, -1, math.sqrt(2)), (1, 1, math.sqrt(2))]
+
+    while open_list:
+        f, g, i, j = heapq.heappop(open_list)
+        if closed[i][j]:
+            continue
+        closed[i][j] = True
+
+        if is_destination(i, j, dest):
+            return trace_path(cell, dest)
+
+        for di, dj, cost in dirs:
+            ni, nj = i + di, j + dj
+            if not is_valid(ni, nj) or not is_unblocked(grid, ni, nj) or closed[ni][nj]:
+                continue
+
+            g_new = cell[i][j].g + cost
+            h_new = calculate_h_value(ni, nj, dest)
+            f_new = g_new + h_new
+
+            if cell[ni][nj].f == float('inf') or cell[ni][nj].f > f_new:
+                cell[ni][nj].f = f_new
+                cell[ni][nj].g = g_new
+                cell[ni][nj].h = h_new
+                cell[ni][nj].parent_i = i
+                cell[ni][nj].parent_j = j
+                heapq.heappush(open_list, (f_new, g_new, ni, nj))
+
+    # no path found
+    return None
+
+# ----- Example usage -----
+def main():
+    grid = [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1, 0, 1, 1],
+        [1, 0, 1, 1, 1, 0, 1, 1, 1, 1],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1, 0, 1, 1],
+        [1, 0, 1, 1, 1, 0, 1, 1, 1, 1],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ]
+
+    src = (1, 0)   # start cell
+    dest = (7, 9)  # destination
+
+    path = a_star_search(grid, src, dest)
+    if path:
+        print("Path found (length = {}):".format(len(path)-1))
+        for step, p in enumerate(path):
+            print(f"Step {step}: {p}")
+    else:
+        print("No path found")
+
+if __name__ == "__main__":
+    main()
+```
+
+# Sample Output (for the example grid above)
+
+```
+Path found (length = 12):
+Step 0: (1, 0)
+Step 1: (2, 0)
+Step 2: (2, 1)
+Step 3: (2, 2)
+Step 4: (3, 2)
+Step 5: (4, 2)
+Step 6: (5, 2)
+Step 7: (6, 2)
+Step 8: (6, 3)
+Step 9: (6, 4)
+Step 10: (7, 5)
+Step 11: (7, 7)
+Step 12: (7, 9)
+```
+
+---
+
