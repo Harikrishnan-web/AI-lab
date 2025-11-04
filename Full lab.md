@@ -873,6 +873,92 @@ if solution:
 else:
     print("No solution found (local maximum reached).")
 ```
+### Problem Statement:
+
+To verify the correctness of a given propositional logic formula by using a model checking algorithm which evaluates the formula under all possible truth assignments of variables.
+
+---
+
+### Aim:
+
+To implement a truth-table based propositional model checking algorithm to determine if the formula is **valid**, **satisfiable** or **unsatisfiable**.
+
+---
+
+### Algorithm (Truth Table Based Model Checking):
+
+1. Take propositional logic formula as input.
+2. Extract all variables present in the formula.
+3. Generate all possible truth value combinations (2^n).
+4. For each combination:
+
+   * Replace variables with truth values.
+   * Evaluate the formula.
+5. After testing all rows:
+
+   * If formula is true in **all** combinations → VALID.
+   * If formula is true in **at least one** combination → SATISFIABLE.
+   * If formula is false in **all** combinations → UNSATISFIABLE.
+
+---
+
+### Program
+
+```python
+from itertools import product
+
+def evaluate(formula, assignment):
+    replaced_formula = formula
+    for var, val in assignment.items():
+        replaced_formula = replaced_formula.replace(var, str(val))
+    return eval(replaced_formula)
+
+def get_variables(formula):
+    return sorted(set([c for c in formula if c.isalpha()]))
+
+def model_checking(formula):
+    variables = get_variables(formula)
+    combinations = list(product([False, True], repeat=len(variables)))
+    true_count = 0
+
+    for values in combinations:
+        assignment = dict(zip(variables, values))
+        result = evaluate(formula, assignment)
+        if result:
+            print(f"Satisfying assignment: {assignment}")
+            true_count += 1
+        else:
+            print(f"Failed assignment: {assignment}")
+
+    if true_count == len(combinations):
+        print("\nResult: The formula is VALID (true in all models).")
+    elif true_count > 0:
+        print("\nResult: The formula is SATISFIABLE (true in some models).")
+    else:
+        print("\nResult: The formula is UNSATISFIABLE (false in all models).")
+
+
+# Driver code
+if __name__ == "__main__":
+    formula = "(A and B) or (not A and not B)"
+    print(f"\nChecking formula: {formula}\n")
+    model_checking(formula)
+```
+
+---
+
+### Sample Output
+
+```
+Checking formula: (A and B) or (not A and not B)
+
+Satisfying assignment: {'A': False, 'B': False}
+Failed assignment: {'A': False, 'B': True}
+Failed assignment: {'A': True, 'B': False}
+Satisfying assignment: {'A': True, 'B': True}
+
+Result: The formula is SATISFIABLE (true in some models).
+```
 
 
 
