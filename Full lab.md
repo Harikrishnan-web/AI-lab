@@ -97,3 +97,86 @@ STEP 3
 ```
 
 ---
+
+---
+
+## **Aim**
+
+To recolor a connected region in a 2D matrix using DFS based Flood Fill, by starting from one pixel and recoloring all 4-direction connected pixels having the same original color.
+
+---
+
+## **Algorithm**
+
+1. store oldColor = image[sr][sc]
+2. if oldColor == newColor → return (no change needed)
+3. use DFS(x,y):
+
+   * if (x,y) out of boundary → return
+   * if image[x][y] ≠ oldColor → return
+   * set image[x][y] = newColor
+   * call DFS for 4 neighbors: up, down, left, right
+4. return the updated image
+
+---
+
+## **Python Code (simple)**
+
+```python
+def dfs(image, x, y, oldColor, newColor):
+    if x < 0 or x >= len(image) or y < 0 or y >= len(image[0]):
+        return
+    if image[x][y] != oldColor:
+        return
+
+    image[x][y] = newColor
+
+    dfs(image, x+1, y, oldColor, newColor)
+    dfs(image, x-1, y, oldColor, newColor)
+    dfs(image, x, y+1, oldColor, newColor)
+    dfs(image, x, y-1, oldColor, newColor)
+
+
+def floodFill(image, sr, sc, newColor):
+    oldColor = image[sr][sc]
+    if oldColor == newColor:
+        return image
+    dfs(image, sr, sc, oldColor, newColor)
+    return image
+
+
+# example
+image = [
+    [1,1,1,0],
+    [0,1,1,1],
+    [1,0,1,1]
+]
+
+print("Original:")
+for r in image:
+    print(r)
+
+result = floodFill(image, 1, 1, 2)  # start at (1,1) and recolor to 2
+
+print("\nAfter FloodFill:")
+for r in result:
+    print(r)
+```
+
+---
+
+## **Sample Output**
+
+```
+Original:
+[1, 1, 1, 0]
+[0, 1, 1, 1]
+[1, 0, 1, 1]
+
+After FloodFill:
+[2, 2, 2, 0]
+[0, 2, 2, 2]
+[1, 0, 2, 2]
+```
+
+---
