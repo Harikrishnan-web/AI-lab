@@ -1250,6 +1250,171 @@ Resolved ['Q'] and ['~Q'] -> [] (empty clause)
 
 Final Result: Is the query entailed? True
 ```
+### Problem Statement
+
+To design and implement a Python program to apply **Bayes' Theorem** to calculate the posterior probability of a hypothesis given evidence.
+
+Example: Given a disease test which is 98% accurate and only 0.5% population has the disease, compute the probability that a person actually has the disease **if they tested positive**.
+
+---
+
+### Aim
+
+To implement Bayes’ Theorem in Python and calculate the posterior probability P(H|E) using given prior and likelihood probabilities.
+
+---
+
+### Algorithm
+
+1. Take as input:
+   • Prior probability P(H)
+   • Likelihood P(E|H)
+   • Complement prior P(¬H)
+   • Likelihood P(E|¬H)
+
+2. Compute total probability of evidence:
+   P(E) = P(E|H)*P(H) + P(E|¬H)*P(¬H)
+
+3. Apply Bayes’ Theorem:
+   Posterior = (P(E|H) * P(H)) / P(E)
+
+4. Output final posterior probability.
+
+---
+
+### Program
+
+```python
+# Bayes' Theorem Implementation
+
+# Input values
+P_H = 0.005            # Prior: P(Disease)
+P_not_H = 1 - P_H      # Complement: P(No Disease)
+
+P_E_given_H = 0.98     # Likelihood: P(Positive Test | Disease)
+P_E_given_not_H = 0.02 # False Positive Rate: P(Positive Test | No Disease)
+
+# Total probability of evidence (Positive Test)
+P_E = (P_E_given_H * P_H) + (P_E_given_not_H * P_not_H)
+
+# Apply Bayes
+P_H_given_E = (P_E_given_H * P_H) / P_E
+
+# OUTPUT
+print("Probability of having the disease given a Positive Test result:")
+print(f"P(Disease | Positive Test) = {P_H_given_E:.4f}  or  {P_H_given_E*100:.2f}%")
+```
+
+---
+
+### Sample Output
+
+```
+Probability of having the disease given a Positive Test result:
+P(Disease | Positive Test) = 0.1976  or  19.76%
+```
+
+---
+
+## Problem Statement:
+
+Given a weather dataset (`weather_data.csv`) with attributes Outlook, Temperature, Humidity and Wind and a class label “Play”, use Naive Bayes classification to predict if a new instance (for example: `['Sunny','Cool','High','Strong']`) should result in output “Yes” or “No”.
+
+---
+
+## Aim:
+
+To implement Naive Bayes Classification using a CSV dataset of weather conditions and predict the class label for a given test instance using conditional probability (Bayes theorem).
+
+---
+
+## Algorithm:
+
+**Step 1:** Import pandas and load the dataset from CSV.
+**Step 2:** Define the test instance to be predicted.
+**Step 3:** Separate dataset by class label “Play”.
+**Step 4:** Calculate prior probabilities for each class.
+**Step 5:** For each feature of test instance, calculate likelihood `P(xi | class)` from dataset.
+**Step 6:** Multiply all likelihoods and the prior to get posterior probability.
+**Step 7:** Compare posterior of Yes / No and return the highest one.
+**Step 8:** Display posterior probabilities and predicted class.
+
+---
+
+## Program
+
+```python
+import pandas as pd
+
+# Load the CSV file
+df = pd.read_csv('weather_data.csv')
+
+# Test data to predict
+test_instance = ['Sunny', 'Cool', 'High', 'Strong']
+
+
+# Step 1: Separate data by class
+def separate_by_class(data):
+    separated = {}
+    for _, row in data.iterrows():
+        class_label = row['Play']
+        features = row[:-1].tolist()
+        if class_label not in separated:
+            separated[class_label] = []
+        separated[class_label].append(features)
+    return separated
+
+
+# Step 2: Calculate prior probabilities
+def prior_prob(separated):
+    total = sum(len(rows) for rows in separated.values())
+    return {cls: len(rows) / total for cls, rows in separated.items()}
+
+
+# Step 3: Calculate likelihood
+def likelihood(feature_index, value, class_rows):
+    count = sum(1 for row in class_rows if row[feature_index] == value)
+    return count / len(class_rows) if len(class_rows) > 0 else 0
+
+
+# Step 4: Predict using Naive Bayes
+def predict(test_instance, data):
+    separated = separate_by_class(data)
+    priors = prior_prob(separated)
+    posteriors = {}
+
+    for cls, rows in separated.items():
+        prob = priors[cls]
+        for i in range(len(test_instance)):
+            prob *= likelihood(i, test_instance[i], rows)
+        posteriors[cls] = prob
+
+    prediction = max(posteriors, key=posteriors.get)
+    return prediction, posteriors
+
+
+# Run the prediction
+prediction, probs = predict(test_instance, df)
+
+# Output the result
+print("Test Instance:", test_instance)
+print("Posterior Probabilities:", probs)
+print("Predicted Class:", prediction)
+```
+
+---
+
+## Sample Output
+
+```
+Test Instance: ['Sunny', 'Cool', 'High', 'Strong']
+Posterior Probabilities: {'No': 0.0108, 'Yes': 0.0276}
+Predicted Class: Yes
+```
+
+---
+
+
 
 
 
