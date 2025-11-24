@@ -1,4 +1,4 @@
-# 1 8 puzzle
+# 1) 8 puzzle
 The best way to optimize the 8-puzzle is to use the **A\* (A-Star) Search Algorithm**.
 
 ## 🚀 A\* Search Algorithm: The Optimization
