@@ -206,4 +206,5 @@ Step 4:
 
 -----
 
-Would you like to try running this A\* code on the challenging 22-move puzzle I mentioned: `(8, 6, 7, 2, 5, 4, 3, 0, 1)`?
+---
+
