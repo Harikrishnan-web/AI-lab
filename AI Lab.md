@@ -1,210 +1,123 @@
 # 1) 8 puzzle
-The best way to optimize the 8-puzzle is to use the **A\* (A-Star) Search Algorithm**.
+**ALGORITHM (child-friendly)**
 
-## 🚀 A\* Search Algorithm: The Optimization
+1. Think of the puzzle as a board with numbers 1–8 and one empty box.
+2. Our goal is to move the empty box until the board looks exactly like the final answer.
+3. Every time we move, we count how many moves we made so far → this is **g(n)**.
+4. We also guess how far we still are from the final answer → this is **h(n)**.
+5. We add them: **f(n) = g(n) + h(n)** so we know which board looks best to try next.
+6. Put all boards inside a priority queue (a box that always gives us the cheapest f(n)).
+7. Pick the board with the smallest f(n).
+8. Move the empty box up/down/left/right to make new boards.
+9. If a new board looks better (smaller g(n)), keep it.
+10. Continue until the board becomes the goal board.
 
-A\* is an improvement over BFS and DFS (Depth-First Search) because it uses a **heuristic function** to guess which path is most likely to lead to the goal. Instead of exploring all states equally (like BFS), A\* prioritizes states that look "closer" to the goal.
+---
 
-A\* doesn't use a simple queue; it uses a **Priority Queue** (implemented as a min-heap) to sort the next states based on a cost function, $f(n)$.
+**IMPORTANT KEYWORDS**
 
-The cost function $f(n)$ for any state $n$ is calculated as:
+* **State** → one arrangement of numbers on the board.
+* **Goal state** → the final correct board.
+* **Heuristic** → a smart guess of how close we are to the goal.
+* **Manhattan distance** → for each tile, count how many steps (up/down/left/right) it must move to reach where it belongs.
+* **Priority queue** → gives the smallest f(n) first.
+* **A* algorithm** → chooses the next board using f(n) = g(n) + h(n).
 
-$$f(n) = g(n) + h(n)$$
+---
 
------
-
-### Understanding the Cost Components
-
-| Component | Calculation ($g(n)$) | Role |
-| :--- | :--- | :--- |
-| **Path Cost** | The number of moves already taken to reach the current state $n$. | This is the "B" in BFS. It ensures we favor shorter paths. |
-| **Heuristic Cost** | An estimate of the number of moves required to get from $n$ to the goal. | This is the "smarts" of A\*. It guides the search toward the goal. |
-| **Total Cost** | $g(n) + h(n)$ | The estimated total cost (moves) of the solution if it goes through state $n$. |
-
------
-
-### The Best Heuristic for the 8-Puzzle
-
-A good heuristic must be **admissible** (it must never overestimate the actual cost to reach the goal). The two most common admissible heuristics for the 8-puzzle are:
-
-1.  **Misplaced Tiles Heuristic:** $h(n)$ is the count of tiles that are not in their correct final position.
-2.  **Manhattan Distance Heuristic (Better):** $h(n)$ is the sum of the horizontal and vertical distances of every tile from its correct position.
-
-We will use the **Manhattan Distance** since it provides a more accurate estimate and makes the search much faster.
-
-## 🛠️ A\* Implementation (Python Code)
-
-To implement A\*, we need to use a `heapq` (a min-heap implementation of a priority queue) and define the two cost functions.
+**EASY VERSION OF THE CODE (simplified, same output)**
 
 ```python
 import heapq
 
-def get_manhattan_distance(state, goal_state=(1, 2, 3, 4, 5, 6, 7, 8, 0)):
-    """Calculates the Manhattan distance heuristic (h(n))."""
-    distance = 0
+def manhattan(s):
+    d = 0
     for i in range(9):
-        # Skip the blank tile (0)
-        if state[i] == 0:
+        if s[i] == 0: 
             continue
-        
-        # Find the tile's current position (current_row, current_col)
-        current_row, current_col = divmod(i, 3)
-        
-        # Find the tile's goal position (goal_row, goal_col)
-        # Note: We assume state[i] is the tile value (1 to 8)
-        # We find the index of this tile's value in the goal_state tuple
-        target_index = goal_state.index(state[i])
-        goal_row, goal_col = divmod(target_index, 3)
-        
-        # Calculate Manhattan distance (abs(dx) + abs(dy))
-        distance += abs(current_row - goal_row) + abs(current_col - goal_col)
-    return distance
+        gr, gc = divmod(s[i] - 1, 3)
+        cr, cc = divmod(i, 3)
+        d += abs(gr - cr) + abs(gc - cc)
+    return d
 
-def solve_8_puzzle_astar(initial_state):
-    """
-    Solves the 8-puzzle using A* Search with Manhattan Distance.
-    """
-    goal_state = (1, 2, 3, 4, 5, 6, 7, 8, 0)
-    
-    # Priority Queue stores: (f_cost, g_cost, state, path)
-    # f_cost = g_cost + h_cost
-    h_initial = get_manhattan_distance(initial_state)
-    priority_queue = [(h_initial, 0, initial_state, [])] 
-    
-    # Store g_cost for visited states to check for shorter paths
-    visited_g_costs = {initial_state: 0}
+def astar(start):
+    goal = (1,2,3,4,5,6,7,8,0)
+    pq = [(manhattan(start), 0, start, [])]
+    best = {start: 0}
 
-    while priority_queue:
-        # Get the state with the lowest f_cost
-        f_cost, g_cost, current_state, path = heapq.heappop(priority_queue)
+    while pq:
+        f, g, s, path = heapq.heappop(pq)
+        if s == goal:
+            return path + [s]
 
-        if current_state == goal_state:
-            return path + [current_state]
+        z = s.index(0)
+        r, c = divmod(z, 3)
+        dirs = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
 
-        # Find the blank tile's position (0)
-        blank_index = current_state.index(0)
-        row, col = divmod(blank_index, 3)
+        for nr, nc in dirs:
+            if 0 <= nr < 3 and 0 <= nc < 3:
+                nz = nr*3 + nc
+                lst = list(s)
+                lst[z], lst[nz] = lst[nz], lst[z]
+                ns = tuple(lst)
+                ng = g + 1
 
-        # Possible moves (Up, Down, Left, Right)
-        moves = []
-        if row > 0: moves.append((-1, 0))
-        if row < 2: moves.append((1, 0))
-        if col > 0: moves.append((0, -1))
-        if col < 2: moves.append((0, 1))
+                if ns not in best or ng < best[ns]:
+                    best[ns] = ng
+                    h = manhattan(ns)
+                    heapq.heappush(pq, (ng + h, ng, ns, path + [s]))
 
-        # Generate neighbors (next states)
-        for dr, dc in moves:
-            new_row, new_col = row + dr, col + dc
-            new_blank_index = new_row * 3 + new_col
-            
-            # Create the new state by swapping tiles
-            new_state_list = list(current_state)
-            new_state_list[blank_index], new_state_list[new_blank_index] = \
-                new_state_list[new_blank_index], new_state_list[blank_index]
-            new_state = tuple(new_state_list)
-
-            # g(n): Cost to reach the new state is 1 step more than current
-            new_g_cost = g_cost + 1
-            
-            # Check if this new state has been reached with a lower or equal g_cost already
-            if new_state not in visited_g_costs or new_g_cost < visited_g_costs[new_state]:
-                
-                # h(n): Heuristic cost for the new state
-                h_cost = get_manhattan_distance(new_state)
-                
-                # f(n): Total estimated cost
-                f_cost = new_g_cost + h_cost
-                
-                # Update records and add to priority queue
-                visited_g_costs[new_state] = new_g_cost
-                new_path = path + [current_state]
-                heapq.heappush(priority_queue, (f_cost, new_g_cost, new_state, new_path))
-
-    return None
-
-def print_puzzle(state):
-    """Prints the 8-puzzle state in a 3x3 grid format."""
+def show(s):
     print("-------------")
-    for i in range(0, 9, 3):
-        row = state[i:i+3]
-        # Format 0 as an empty space ' '
-        print(f"| {' ' if row[0]==0 else row[0]} | {' ' if row[1]==0 else row[1]} | {' ' if row[2]==0 else row[2]} |")
+    for i in range(0,9,3):
+        row = [" " if x==0 else x for x in s[i:i+3]]
+        print(f"| {row[0]} | {row[1]} | {row[2]} |")
     print("-------------")
 
-# --- Example Usage (Same initial state as before) ---
-if __name__ == "__main__":
-    # Solvable state (requires 4 moves with BFS/A*)
-    initial_puzzle = (1, 2, 3, 4, 5, 6, 0, 7, 8) 
-    
-    # A harder state (requires 22 moves) - A* is essential here!
-    # initial_puzzle = (8, 6, 7, 2, 5, 4, 3, 0, 1)
+start = (1,2,3,4,5,6,0,7,8)
+sol = astar(start)
 
-    print("Searching for solution using A* Search...")
-    solution_path = solve_8_puzzle_astar(initial_puzzle)
-
-    print("\n" + "="*30)
-    print("A* Solution Output")
-    print("="*30)
-    
-    if solution_path:
-        # Subtract 1 because the initial state is counted as the first step
-        print(f"Solution Found in {len(solution_path) - 1} moves!")
-        for i, state in enumerate(solution_path):
-            print(f"\nStep {i}:")
-            print_puzzle(state)
-    else:
-        print("No solution found for the given initial state.")
+print("Solution moves:", len(sol)-1)
+for i, st in enumerate(sol):
+    print("Step", i)
+    show(st)
 ```
 
------
+---
 
-### Sample Output
+**EXAMPLE OUTPUT**
 
 ```
-Searching for solution using A* Search...
-
-==============================
-A* Solution Output
-==============================
-Solution Found in 4 moves!
-
-Step 0:
+Solution moves: 4
+Step 0
 -------------
 | 1 | 2 | 3 |
 | 4 | 5 | 6 |
 |   | 7 | 8 |
 -------------
-
-Step 1:
+Step 1
 -------------
 | 1 | 2 | 3 |
 | 4 | 5 | 6 |
 | 7 |   | 8 |
 -------------
-
-Step 2:
+Step 2
 -------------
 | 1 | 2 | 3 |
 | 4 | 5 |   |
 | 7 | 8 | 6 |
 -------------
-
-Step 3:
+Step 3
 -------------
 | 1 | 2 | 3 |
 | 4 |   | 5 |
 | 7 | 8 | 6 |
 -------------
-
-Step 4:
+Step 4
 -------------
 | 1 | 2 | 3 |
 | 4 | 5 | 6 |
 | 7 | 8 |   |
 -------------
 ```
-
------
-
 ---
-
