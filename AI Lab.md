@@ -243,144 +243,77 @@ KEYWORDS
 EASY & CLEAN PYTHON CODE (fully working)
 
 ```python
-import heapq
-import math
 
-ROW = 9
-COL = 10
+  
+from collections import deque
 
-class Cell:
-    def __init__(self):
-        self.parent_i = -1
-        self.parent_j = -1
-        self.f = float('inf')
-        self.g = float('inf')
-        self.h = 0.0
+def find_shortest_path(grid):
+    ROWS = len(grid)
+    COLS = len(grid[0])
+    start, goal = None, None
 
-def is_valid(row, col):
-    return 0 <= row < ROW and 0 <= col < COL
+    for r in range(ROWS):
+        for c in range(COLS):
+            if grid[r][c] == 'S': start = (r, c)
+            elif grid[r][c] == 'G': goal = (r, c)
 
-def is_unblocked(grid, row, col):
-    return grid[row][col] == 1
+    if not start or not goal: return "Error: 'S' or 'G' missing."
 
-def is_destination(row, col, dest):
-    return row == dest[0] and col == dest[1]
+    queue = deque([(start, [start])])
+    visited = {start}
+    movements = [(0, 1), (0, -1), (1, 0), (-1, 0)] # (dr, dc)
 
-def calculate_h_value(row, col, dest):
-    return math.hypot(row - dest[0], col - dest[1])
+    while queue:
+        (r, c), path = queue.popleft()
 
-def trace_path(cell_details, dest):
-    path = []
-    row, col = dest
-    while not (cell_details[row][col].parent_i == row and cell_details[row][col].parent_j == col):
-        path.append((row, col))
-        pi = cell_details[row][col].parent_i
-        pj = cell_details[row][col].parent_j
-        row, col = pi, pj
-    path.append((row, col))
-    path.reverse()
-    print("The Path is")
-    for p in path:
-        print("->", p, end=" ")
-    print()
+        if (r, c) == goal: return path
 
-def a_star_search(grid, src, dest):
-    if not is_valid(src[0], src[1]) or not is_valid(dest[0], dest[1]):
-        print("Source or destination is invalid")
-        return
+        for dr, dc in movements:
+            next_r, next_c = r + dr, c + dc
+            next_pos = (next_r, next_c)
 
-    if not is_unblocked(grid, src[0], src[1]) or not is_unblocked(grid, dest[0], dest[1]):
-        print("Source or the destination is blocked")
-        return
+            is_valid = (0 <= next_r < ROWS) and (0 <= next_c < COLS)
+            
+            if is_valid:
+                is_not_wall = grid[next_r][next_c] != 1 
+                is_not_visited = next_pos not in visited
+                
+                if is_not_wall and is_not_visited:
+                    visited.add(next_pos)
+                    queue.append((next_pos, path + [next_pos]))
+                    
+    return "No path found."
 
-    if is_destination(src[0], src[1], dest):
-        print("We are already at the destination")
-        return
+# --- Grid Setup ---
+# 1 = Wall, 0 = Open
+grid_map = [
+    ['S', 0, 1, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 0],
+    [1, 1, 0, 'G']
+]
 
-    closed_list = [[False for _ in range(COL)] for _ in range(ROW)]
-    cell_details = [[Cell() for _ in range(COL)] for _ in range(ROW)]
+# --- Execution ---
+print("Grid Map:")
+for row in grid_map: print(row)
 
-    i, j = src
-    cell_details[i][j].f = 0.0
-    cell_details[i][j].g = 0.0
-    cell_details[i][j].h = 0.0
-    cell_details[i][j].parent_i = i
-    cell_details[i][j].parent_j = j
+shortest_path = find_shortest_path(grid_map)
 
-    open_list = []
-    heapq.heappush(open_list, (0.0, i, j))
+print("\nResult:")
+if isinstance(shortest_path, str):
+    print(shortest_path)
+else:
+    print("Shortest Path:", shortest_path)
 
-    found_dest = False
+    # Visualization
+    path_grid = [list(row) for row in grid_map]
+    for r, c in shortest_path:
+        if path_grid[r][c] not in ('S', 'G'):
+            path_grid[r][c] = '*' 
 
-    # 8 possible movements
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
-                  (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    print("\nVisualized Path (*):")
+    for row in path_grid: print(row)
 
-    while open_list:
-        p = heapq.heappop(open_list)
-        i, j = p[1], p[2]
-
-        if closed_list[i][j]:
-            continue
-
-        closed_list[i][j] = True
-
-        for d in directions:
-            new_i = i + d[0]
-            new_j = j + d[1]
-
-            if not is_valid(new_i, new_j):
-                continue
-            if not is_unblocked(grid, new_i, new_j):
-                continue
-            if closed_list[new_i][new_j]:
-                continue
-
-            if is_destination(new_i, new_j, dest):
-                cell_details[new_i][new_j].parent_i = i
-                cell_details[new_i][new_j].parent_j = j
-                print("The destination cell is found")
-                trace_path(cell_details, dest)
-                found_dest = True
-                return
-
-            # Cost to move: use 1.0 for orthogonal, sqrt(2) for diagonal (more realistic)
-            if abs(d[0]) + abs(d[1]) == 2:
-                move_cost = math.sqrt(2)
-            else:
-                move_cost = 1.0
-
-            g_new = cell_details[i][j].g + move_cost
-            h_new = calculate_h_value(new_i, new_j, dest)
-            f_new = g_new + h_new
-
-            if cell_details[new_i][new_j].f == float('inf') or cell_details[new_i][new_j].f > f_new:
-                heapq.heappush(open_list, (f_new, new_i, new_j))
-                cell_details[new_i][new_j].f = f_new
-                cell_details[new_i][new_j].g = g_new
-                cell_details[new_i][new_j].h = h_new
-                cell_details[new_i][new_j].parent_i = i
-                cell_details[new_i][new_j].parent_j = j
-
-    if not found_dest:
-        print("Failed to find the destination cell")
-
-if __name__ == "__main__":
-    grid = [
-        [1, 1, 1, 1, 1, 1, 0, 0, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
-        [0, 0, 1, 1, 1, 1, 1, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    ]
-
-    src = (0, 0)
-    dest = (8, 9)
-    a_star_search(grid, src, dest)
 ```
 
 EXAMPLE OUTPUT (one possible correct run)
